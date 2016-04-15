@@ -24,7 +24,7 @@ def load_data(input_dir, max_nb_cha, width, height, channels, len_set, cha_set):
                 filename = str(i) + '.jpg'
                 filepath = dirpath + os.sep + filename
                 im = Image.open(filepath)
-                im.resize((width, height))
+                im = im.resize((width, height))
                 pixels = list(im.getdata())
                 x.append([[[pixels[k*width+i][j] for k in range(height)] for i in range(width)] for j in range(channels)]) # 转成（channel，width，height）shape
             

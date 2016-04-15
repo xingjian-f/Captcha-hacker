@@ -108,16 +108,16 @@ if __name__ == '__main__':
 
     save_dir = 'model/' + str(datetime.now()).split('.')[0].split()[0] + '/' # 每天都保存在相应的目录中
     # train_data_dir = 'gen_images/img_data'
-    train_data_dir = 'gen_images/img_data/0000010'
+    train_data_dir = 'gen_images/img_data/00000000'
     test_data_dir = 'test_data/'
-    weights_file_path = 'model/2016-04-14/11:56:08.h5'
+    # weights_file_path = 'model/2016-04-14/11:56:08.h5'
 
     model = build_cnn(img_channels, img_width, img_height, max_nb_cha, nb_classes) # 生成CNN的架构
     
-    model.load_weights(weights_file_path) # 读取训练好的模型
+    # model.load_weights(weights_file_path) # 读取训练好的模型
     X_train, Y_train_nb, Y_train = load_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set) 
-    # train(model, batch_size, nb_classes, max_nb_cha, nb_epoch, save_dir, save_minutes, train_data_dir, img_width, img_height, img_channels, len_set, cha_set)
+    train(model, batch_size, nb_classes, max_nb_cha, nb_epoch, save_dir, save_minutes, X_train, Y_train_nb, Y_train)
     
-    # X_test, Y_test_nb, Y_test = load_test_data(test_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
-    X_test, Y_test_nb, Y_test = X_train, Y_train_nb, Y_train
+    X_test, Y_test_nb, Y_test = load_data(test_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
+    # X_test, Y_test_nb, Y_test = X_train, Y_train_nb, Y_train
     test(model, len_set, cha_set, max_nb_cha, X_test, Y_test_nb, Y_test)
