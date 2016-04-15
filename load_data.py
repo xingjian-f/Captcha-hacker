@@ -49,7 +49,7 @@ def load_data(input_dir, max_nb_cha, width, height, channels, len_set, cha_set):
     for i in range(max_nb_cha):
         y[i] = np.array(one_hot_encoder(y[i], cha_set))
 
-    print 'Data loaded, spend time(s) :', time.time()-tag
+    print 'Data loaded, spend time(m) :', (time.time()-tag)/60
     return [x, y_nb, y]
 
 
