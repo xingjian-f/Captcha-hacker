@@ -2,6 +2,9 @@
 import numpy as np
 
 def one_hot_encoder(data, whole_set):
+    """
+     对整个list做encoder，而不是单个record
+    """
     ret = []
     for i in data:
         idx = whole_set.index(i)

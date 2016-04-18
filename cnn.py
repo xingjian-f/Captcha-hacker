@@ -8,7 +8,7 @@ from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.optimizers import SGD
 from util import one_hot_decoder
-from load_data import load_data
+from load_data import load_data, generate_data
 
 
 def build_cnn(img_channels, img_width, img_height, max_nb_cha, nb_classes):
@@ -68,7 +68,7 @@ def test(model, len_set, cha_set, max_nb_cha, X_test, Y_test_nb, Y_test):
     print 'Accuracy:', float(correct) / nb_sample
 
 
-def train(model, batch_size, nb_classes, max_nb_cha, nb_epoch, save_dir, save_minutes, X_train, Y_train_nb, Y_train):
+def train(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, X_train, Y_train_nb, Y_train):
     print 'X_train shape:', X_train.shape
     print X_train.shape[0], 'train samples'
 
@@ -90,6 +90,25 @@ def train(model, batch_size, nb_classes, max_nb_cha, nb_epoch, save_dir, save_mi
     model.save_weights(save_path)
     print 'Training time(h):', (time.time()-start_time) / 3600
 
+
+def train_on_generator(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, generator):
+    if os.path.exists(save_dir) == False:
+        os.mkdir(save_dir)
+    tag = time.time()
+    start_time = time.time()
+    for i in range(nb_epoch):
+        samples_per_epoch = 200 # 每个epoch跑多少数据
+        model.fit_generator(generator, samples_per_epoch=samples_per_epoch, nb_epoch=1, nb_worker=4)
+        if time.time()-tag > save_minutes*60:
+            save_path = save_dir + str(datetime.now()).split('.')[0].split()[1] + '.h5' # 存储路径使用当前的时间
+            model.save_weights(save_path)
+            tag = time.time() # 重新为存储计时
+
+    save_path = save_dir + str(datetime.now()).split('.')[0].split()[1] + '.h5'
+    model.save_weights(save_path)
+    print 'Training time(h):', (time.time()-start_time) / 3600
+
+    
 if __name__ == '__main__':
     img_width, img_height = 200, 50
     img_channels = 3
@@ -102,17 +121,21 @@ if __name__ == '__main__':
     save_minutes = 5 # 每隔多少分钟保存一次模型
 
     save_dir = 'model/' + str(datetime.now()).split('.')[0].split()[0] + '/' # 模型保存在当天应的目录中
-    # train_data_dir = 'gen_images/img_data'
-    train_data_dir = 'gen_images/img_data/00000000'
+    train_data_dir = 'gen_images/img_data'
+    # train_data_dir = 'gen_images/img_data/00000000'
     test_data_dir = 'test_data/'
     weights_file_path = 'model/2016-04-15/19:49:18.h5'
 
     model = build_cnn(img_channels, img_width, img_height, max_nb_cha, nb_classes) # 生成CNN的架构
-    
     # model.load_weights(weights_file_path) # 读取训练好的模型
-    X_train, Y_train_nb, Y_train = load_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set) 
-    train(model, batch_size, nb_classes, max_nb_cha, nb_epoch, save_dir, save_minutes, X_train, Y_train_nb, Y_train)
-    
+
+    # 先生成整个数据集，然后训练
+    # X_train, Y_train_nb, Y_train = load_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set) 
+    # train(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, X_train, Y_train_nb, Y_train)
+    # 边训练边生成数据
+    generator = generate_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
+    train_on_generator(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, generator)
+
     # X_test, Y_test_nb, Y_test = load_data(test_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
     X_test, Y_test_nb, Y_test = X_train, Y_train_nb, Y_train
     test(model, len_set, cha_set, max_nb_cha, X_test, Y_test_nb, Y_test)
