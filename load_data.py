@@ -53,44 +53,50 @@ def load_data(input_dir, max_nb_cha, width, height, channels, len_set, cha_set):
     return [x, y_nb, y]
 
 
-def generate_data(input_dir, max_nb_cha, width, height, channels, len_set, cha_set):
+def generate_data(input_dir, max_nb_cha, width, height, channels, len_set, cha_set, batch_size):
+    cnt = 0
+    x = []
+    y_nb = []
+    y = [[] for i in range(max_nb_cha)]
     while True:
         for dirpath, dirnames, filenames in os.walk(input_dir):
             nb_pic = len(filenames)-1
-            if nb_pic >= 1:
-                for i in range(1, nb_pic+1):
-                    filename = str(i) + '.jpg'
-                    filepath = dirpath + os.sep + filename
-                    im = Image.open(filepath)
-                    im = im.resize((width, height))
-                    pixels = list(im.getdata())
-                    x = [[[pixels[k*width+i][j] for k in range(height)] for i in range(width)] for j in range(channels)] # 转成（channel，width，height）shape
-                
+            if nb_pic >= 1:            
                 label_path = dirpath + os.sep + 'label.txt'
                 with open(label_path) as f:
-                    for raw in f:
+                    for (i, raw) in zip(range(1, nb_pic+1), f):
+                        filename = str(i) + '.jpg'
+                        filepath = dirpath + os.sep + filename
+                        im = Image.open(filepath)
+                        im = im.resize((width, height))
+                        pixels = list(im.getdata())
+                        x.append([[[pixels[k*width+i][j] for k in range(height)] for i in range(width)] for j in range(channels)]) # 转成（channel，width，height）shape
+                        
                         raw = raw.strip('\n\r')
-                        y_nb = len(raw)
-                        y = [] # index 0~max_nb_cha-1
+                        y_nb.append(len(raw))
                         for i in range(max_nb_cha):
                             if i < len(raw):
-                                y.append(raw[i])
+                                y[i].append(raw[i])
                             else:
-                                y.append('empty')
-                        
-                # 转成keras能接受的数据形式，以及做one hot 编码
-                x = np.array([x])
-                x = x.astype('float32') # gpu只接受32位浮点运算
-                x /= 255 # scale
-                y_nb = np.array(one_hot_encoder([y_nb], len_set))
-                for i in range(max_nb_cha):
-                    y[i] = np.array(one_hot_encoder([y[i]], cha_set))
+                                y[i].append('empty')
 
-                ret = {'output%d'%i:y[i-1] for i in range(1, max_nb_cha+1)}
-                ret['input'] = x
-                ret['output_nb'] = y_nb
-                yield ret
+                        cnt += 1
+                        if cnt == batch_size:
+                            x = np.array(x)
+                            x = x.astype('float32') # gpu只接受32位浮点运算
+                            x /= 255 # scale
+                            y_nb = np.array(one_hot_encoder(y_nb, len_set))
+                            for i in range(max_nb_cha):
+                                y[i] = np.array(one_hot_encoder(y[i], cha_set))
 
+                            ret = {'output%d'%i:y[i-1] for i in range(1, max_nb_cha+1)}
+                            ret['input'] = x
+                            ret['output_nb'] = y_nb
+                            yield ret
+                            x = []
+                            y_nb = []
+                            y = [[] for i in range(max_nb_cha)]
+                            cnt = 0
 
 
 if __name__ == '__main__':
@@ -102,8 +108,10 @@ if __name__ == '__main__':
     len_set = range(1, max_nb_cha+1)
     cha_set = list("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") + ['empty'] # 文本字符集
     # x = load_data(input_dir, max_nb_cha, width, height, channels, len_set, cha_set)
-    turn = 0
-    # for x in generator(input_dir, max_nb_cha, width, height, channels, len_set, cha_set):
-    #     print x
-    #     turn -= 1
-    #     if 
+    turn = 2
+    batch_size = 4
+    for x in generate_data(input_dir, max_nb_cha, width, height, channels, len_set, cha_set, batch_size):
+        print x
+        turn -= 1
+        if turn <= 0:
+            break

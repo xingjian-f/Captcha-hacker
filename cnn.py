@@ -97,7 +97,7 @@ def train_on_generator(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_m
     tag = time.time()
     start_time = time.time()
     for i in range(nb_epoch):
-        samples_per_epoch = 200 # 每个epoch跑多少数据
+        samples_per_epoch = 10000 # 每个epoch跑多少数据
         model.fit_generator(generator, samples_per_epoch=samples_per_epoch, nb_epoch=1, nb_worker=4)
         if time.time()-tag > save_minutes*60:
             save_path = save_dir + str(datetime.now()).split('.')[0].split()[1] + '.h5' # 存储路径使用当前的时间
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     # X_train, Y_train_nb, Y_train = load_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set) 
     # train(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, X_train, Y_train_nb, Y_train)
     # 边训练边生成数据
-    generator = generate_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
+    generator = generate_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set, batch_size)
     train_on_generator(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, generator)
 
     # X_test, Y_test_nb, Y_test = load_data(test_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
