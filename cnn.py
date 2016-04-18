@@ -29,21 +29,15 @@ def build_cnn(img_channels, img_width, img_height, max_nb_cha, nb_classes):
     model.add_node(Dropout(0.5), input='dense', name='drop3')
 
     model.add_node(Dense(max_nb_cha, activation='softmax'), input='drop3', name='dense_nb')
-    model.add_node(Dense(nb_classes, activation='softmax'), input='drop3', name='dense1')
-    model.add_node(Dense(nb_classes, activation='softmax'), input='drop3', name='dense2')
-    model.add_node(Dense(nb_classes, activation='softmax'), input='drop3', name='dense3')
-    model.add_node(Dense(nb_classes, activation='softmax'), input='drop3', name='dense4')
+    for i in range(1, max_nb_cha+1):
+        model.add_node(Dense(nb_classes, activation='softmax'), input='drop3', name='dense%d' % i)
     model.add_output(name='output_nb', input='dense_nb')
-    model.add_output(name='output1', input='dense1')
-    model.add_output(name='output2', input='dense2')
-    model.add_output(name='output3', input='dense3')
-    model.add_output(name='output4', input='dense4')
+    for i in range(1, max_nb_cha+1):
+        model.add_output(name='output%d' % i, input='dense%d' % i)
 
-    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    model.compile(loss={'output_nb':'categorical_crossentropy', 'output1':'categorical_crossentropy',
-                'output2':'categorical_crossentropy', 'output3':'categorical_crossentropy',
-                'output4':'categorical_crossentropy'}, 
-                optimizer='adadelta')
+    loss = {'output%d'%i:'categorical_crossentropy' for i in range(1, max_nb_cha+1)}
+    loss['output_nb'] = 'categorical_crossentropy'
+    model.compile(loss=loss, optimizer='adadelta')
     return model
 
 
@@ -51,7 +45,7 @@ def test(model, len_set, cha_set, max_nb_cha, X_test, Y_test_nb, Y_test):
     # 开始预测并验证准确率，需要先把预测结果从概率转到对应的标签
     predictions = model.predict({'input':X_test})
     pred_nbs = one_hot_decoder(predictions['output_nb'], len_set)
-    pred_chas = [one_hot_decoder(predictions['output%d' % j], cha_set) for j in range(1, 5)]
+    pred_chas = [one_hot_decoder(predictions['output%d' % j], cha_set) for j in range(1, max_nb_cha+1)]
     Y_test_nb = one_hot_decoder(Y_test_nb, len_set)
     Y_test = [one_hot_decoder(i, cha_set) for i in Y_test]
 
@@ -80,8 +74,9 @@ def train(model, batch_size, nb_classes, max_nb_cha, nb_epoch, save_dir, save_mi
 
     if os.path.exists(save_dir) == False:
         os.mkdir(save_dir)
-    data = {'input':X_train, 'output_nb':Y_train_nb, 'output1':Y_train[0], 'output2':Y_train[1],
-        'output3':Y_train[2], 'output4':Y_train[3]}
+    data = {'output%d'%i:Y_train[i-1] for i in range(1, max_nb_cha+1)}
+    data['input'] = X_train
+    data['output_nb'] = Y_train_nb
     tag = time.time()
     start_time = time.time()
     for i in range(nb_epoch):
@@ -106,15 +101,15 @@ if __name__ == '__main__':
     nb_epoch = 20
     save_minutes = 5 # 每隔多少分钟保存一次模型
 
-    save_dir = 'model/' + str(datetime.now()).split('.')[0].split()[0] + '/' # 每天都保存在相应的目录中
-    train_data_dir = 'gen_images/img_data'
-    # train_data_dir = 'gen_images/img_data/00000000'
+    save_dir = 'model/' + str(datetime.now()).split('.')[0].split()[0] + '/' # 模型保存在当天应的目录中
+    # train_data_dir = 'gen_images/img_data'
+    train_data_dir = 'gen_images/img_data/00000000'
     test_data_dir = 'test_data/'
     weights_file_path = 'model/2016-04-15/19:49:18.h5'
 
     model = build_cnn(img_channels, img_width, img_height, max_nb_cha, nb_classes) # 生成CNN的架构
     
-    model.load_weights(weights_file_path) # 读取训练好的模型
+    # model.load_weights(weights_file_path) # 读取训练好的模型
     X_train, Y_train_nb, Y_train = load_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set) 
     train(model, batch_size, nb_classes, max_nb_cha, nb_epoch, save_dir, save_minutes, X_train, Y_train_nb, Y_train)
     
