@@ -22,8 +22,8 @@ def one_hot_decoder(data, whole_set):
 
 
 def plot_loss_figure(history, save_path):
-    train_loss = [i.history['loss'] for i in history]
-    val_loss = [i.history['val_loss'] for i in history]
+    train_loss = history.history['loss']
+    val_loss = history.history['val_loss']
     plt.plot(train_loss, 'b', val_loss, 'r')
     plt.xlabel('train_loss: blue   val_loss: red      epoch')
     plt.ylabel('loss')

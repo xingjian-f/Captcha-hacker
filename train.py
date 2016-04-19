@@ -3,6 +3,7 @@ import os
 import time
 from datetime import datetime
 from keras.optimizers import SGD
+from keras.callbacks import ModelCheckpoint
 from util import one_hot_decoder, plot_loss_figure, pack_data
 from load_data import load_data, generate_data
 from cnn_architecture.cnn0 import build_cnn
@@ -35,47 +36,36 @@ def test(model, len_set, cha_set, max_nb_cha, X_test, Y_test_nb, Y_test):
     print 'Accuracy:', float(correct) / nb_sample
 
 
-def train(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, train_data, val_data):
+def train(model, batch_size, max_nb_cha, nb_epoch, save_dir, train_data, val_data):
     print 'X_train shape:', X_train.shape
     print X_train.shape[0], 'train samples'
     if os.path.exists(save_dir) == False:
         os.mkdir(save_dir)
 
-    tag = time.time()
     start_time = time.time()
-    history = []
-    for i in range(nb_epoch):
-        history.append(model.fit(train_data, batch_size=batch_size, nb_epoch=1, validation_data=val_data))
-        if time.time()-tag > save_minutes*60:
-            save_path = save_dir + str(datetime.now()).split('.')[0].split()[1] + '.h5' # 存储路径使用当前的时间
-            model.save_weights(save_path)
-            tag = time.time() # 重新为存储计时
+    save_path = save_dir + 'weights.{epoch:02d}-{val_loss:.2f}.hdf5'
+    check_pointer = ModelCheckpoint(save_path)
+    history = model.fit(train_data, batch_size=batch_size, nb_epoch=nb_epoch, validation_data=val_data, 
+    	callbacks=[check_pointer])
 
-    save_path = save_dir + str(datetime.now()).split('.')[0].split()[1] + '.h5'
-    model.save_weights(save_path)
     plot_loss_figure(history, save_dir + str(datetime.now()).split('.')[0].split()[1]+'.jpg')
     print 'Training time(h):', (time.time()-start_time) / 3600
 
 
-def train_on_generator(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, generator, val_data):
-    if os.path.exists(save_dir) == False:
-        os.mkdir(save_dir)
-    tag = time.time()
-    start_time = time.time()
-    history = []
-    for i in range(nb_epoch):
-        samples_per_epoch = 100 # 每个epoch跑多少数据
-        history.append(model.fit_generator(generator, samples_per_epoch=samples_per_epoch, nb_epoch=1, 
-            nb_worker=4, validation_data=val_data))
-        if time.time()-tag > save_minutes*60:
-            save_path = save_dir + str(datetime.now()).split('.')[0].split()[1] + '.h5' # 存储路径使用当前的时间
-            model.save_weights(save_path)
-            tag = time.time() # 重新为存储计时
+def train_on_generator(model, batch_size, max_nb_cha, nb_epoch, save_dir, generator, val_data):
+	print 'Train using generator'
+	if os.path.exists(save_dir) == False:
+		os.mkdir(save_dir)
+	
+	start_time = time.time()
+	save_path = save_dir + 'weights.{epoch:02d}-{val_loss:.2f}.hdf5'
+	check_pointer = ModelCheckpoint(save_path)
+	samples_per_epoch = 100 # 每个epoch跑多少数据
+	history = model.fit_generator(generator, samples_per_epoch=samples_per_epoch, nb_epoch=nb_epoch, 
+		nb_worker=4, validation_data=val_data, callbacks=[check_pointer])
 
-    save_path = save_dir + str(datetime.now()).split('.')[0].split()[1] + '.h5'
-    model.save_weights(save_path)
-    plot_loss_figure(history, save_dir + str(datetime.now()).split('.')[0].split()[1]+'.jpg')
-    print 'Training time(h):', (time.time()-start_time) / 3600
+	plot_loss_figure(history, save_dir + str(datetime.now()).split('.')[0].split()[1]+'.jpg')
+	print 'Training time(h):', (time.time()-start_time) / 3600
 
     
 if __name__ == '__main__':
@@ -86,8 +76,7 @@ if __name__ == '__main__':
     cha_set = list("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") + ['empty'] # 文本字符集
     nb_classes = 63 # 数字10 + 大小写字母52 + empty1
     batch_size = 128
-    nb_epoch = 20
-    save_minutes = 5 # 每隔多少分钟保存一次模型
+    nb_epoch = 5
 
     save_dir = 'model/' + str(datetime.now()).split('.')[0].split()[0] + '/' # 模型保存在当天对应的目录中
     # train_data_dir = 'gen_images/img_data/train'
@@ -95,23 +84,25 @@ if __name__ == '__main__':
     # val_data_dir = 'gen_images/img_data/validation'
     val_data_dir = 'gen_images/img_data/00000010'
     test_data_dir = 'test_data/'
-    weights_file_path = 'model/2016-04-19/17:41:46.h5'
+    # weights_file_path = 'model/2016-04-19/19:23:03.h5'
 
     model = build_cnn(img_channels, img_width, img_height, max_nb_cha, nb_classes) # 生成CNN的架构
-    model.load_weights(weights_file_path) # 读取训练好的模型
+    # model.load_weights(weights_file_path) # 读取训练好的模型
 
-    # 先生成整个数据集，然后训练
-    X_train, Y_train_nb, Y_train = load_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set) 
-    X_val, Y_val_nb, Y_val = load_data(val_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
-    train_data = pack_data(X_train, Y_train_nb, Y_train, max_nb_cha)
-    val_data = pack_data(X_val, Y_val_nb, Y_val, max_nb_cha)
-    train(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, train_data, val_data)
-    # 边训练边生成数据
-    # generator = generate_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set, batch_size)
+    # 先生成整个数据集，然后训练    
     # X_val, Y_val_nb, Y_val = load_data(val_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
     # val_data = pack_data(X_val, Y_val_nb, Y_val, max_nb_cha)
-    # train_on_generator(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, generator, val_data)
+    # X_train, Y_train_nb, Y_train = load_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set) 
+    # train_data = pack_data(X_train, Y_train_nb, Y_train, max_nb_cha)
+    # train(model, batch_size, max_nb_cha, nb_epoch, save_dir, train_data, val_data)
+    # 边训练边生成数据
+    generator = generate_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set, batch_size)
+    X_val, Y_val_nb, Y_val = load_data(val_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
+    val_data = pack_data(X_val, Y_val_nb, Y_val, max_nb_cha)
+    train_on_generator(model, batch_size, max_nb_cha, nb_epoch, save_dir, generator, val_data)
 
     # X_test, Y_test_nb, Y_test = load_data(test_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
-    X_test, Y_test_nb, Y_test = X_train, Y_train_nb, Y_train
-    test(model, len_set, cha_set, max_nb_cha, X_test, Y_test_nb, Y_test)
+    # X_test, Y_test_nb, Y_test = X_val, Y_val_nb, Y_val
+    # test(model, len_set, cha_set, max_nb_cha, X_test, Y_test_nb, Y_test)
+    # X_test, Y_test_nb, Y_test = X_train, Y_train_nb, Y_train
+    # test(model, len_set, cha_set, max_nb_cha, X_test, Y_test_nb, Y_test)
