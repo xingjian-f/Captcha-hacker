@@ -44,7 +44,7 @@ def load_data(input_dir, max_nb_cha, width, height, channels, len_set, cha_set):
     # 转成keras能接受的数据形式，以及做one hot 编码
     x = np.array(x)
     x = x.astype('float32') # gpu只接受32位浮点运算
-    x /= 255 # scale
+    x /= 255 # normalized
     y_nb = np.array(one_hot_encoder(y_nb, len_set))
     for i in range(max_nb_cha):
         y[i] = np.array(one_hot_encoder(y[i], cha_set))
@@ -84,7 +84,7 @@ def generate_data(input_dir, max_nb_cha, width, height, channels, len_set, cha_s
                         if cnt == batch_size:
                             x = np.array(x)
                             x = x.astype('float32') # gpu只接受32位浮点运算
-                            x /= 255 # scale
+                            x /= 255 # normalized
                             y_nb = np.array(one_hot_encoder(y_nb, len_set))
                             for i in range(max_nb_cha):
                                 y[i] = np.array(one_hot_encoder(y[i], cha_set))

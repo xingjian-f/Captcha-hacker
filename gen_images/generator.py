@@ -121,6 +121,7 @@ def captcha_draw(size_im, nb_cha, set_cha, fonts=None, overlap=0.0,
     label_path = dir_path + 'label.txt'
     with open(label_path, 'a') as f:
         f.write(''.join(contents)+'\n') # 在label文件末尾添加新图片的text内容
+    print img_path
     im.save(img_path)
     
 
@@ -136,7 +137,7 @@ def captcha_generator():
     noises = [[], ['point'], ['line'], ['line', 'point']]
     rotates = [True, False]
     nb_chas = [4, 6]
-    nb_image = 1
+    nb_image = 50000
     font_dir = 'fonts/english'
     font_paths = []
     for dirpath, dirnames, filenames in os.walk(font_dir):
@@ -144,13 +145,17 @@ def captcha_generator():
             filepath = dirpath + os.sep + filename
             font_paths.append({'eng':filepath})
 
-    for (overlap, rd_text_pos, rd_text_size, rd_text_color, set_cha, noise, rotate, font_path, 
-        nb_cha) in product(overlaps, rd_text_poss, rd_text_sizes, rd_text_colors, set_chas, 
-        noises, rotates, font_paths, nb_chas): 
         for i in range(nb_image):
-            dir_name = ''.join(map(str, [overlaps.index(overlap), rd_text_poss.index(rd_text_pos), 
-                rd_text_sizes.index(rd_text_size), rd_text_colors.index(rd_text_color), 
-                set_chas.index(set_cha), noises.index(noise), rotates.index(rotate),nb_chas.index(nb_cha)]))
+            overlap = random.choice(overlaps)
+            rd_text_pos = random.choice(rd_text_poss)
+            rd_text_size = random.choice(rd_text_sizes)
+            rd_text_color = random.choice(rd_text_colors)
+            set_cha = random.choice(set_chas)
+            noise = random.choice(noises)
+            rotate = random.choice(rotates)
+            nb_cha = random.choice(nb_chas)
+            font_path = random.choice(font_paths)
+            dir_name = 'all'
             dir_path = 'img_data/'+dir_name+'/'
             captcha_draw(size_im=size_im, nb_cha=nb_cha, set_cha=set_cha, 
                 overlap=overlap, rd_text_pos=rd_text_pos, rd_text_size=rd_text_size, 

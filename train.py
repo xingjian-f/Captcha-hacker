@@ -6,6 +6,7 @@ from keras.optimizers import SGD
 from util import one_hot_decoder
 from load_data import load_data, generate_data
 from cnn_architecture.cnn0 import build_cnn
+# from cnn_architecture.goocnn import build_cnn
 
 def test(model, len_set, cha_set, max_nb_cha, X_test, Y_test_nb, Y_test):
     # 开始预测并验证准确率，需要先把预测结果从概率转到对应的标签
@@ -84,12 +85,12 @@ if __name__ == '__main__':
     cha_set = list("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") + ['empty'] # 文本字符集
     nb_classes = 63 # 数字10 + 大小写字母52 + empty1
     batch_size = 32
-    nb_epoch = 500
+    nb_epoch = 50
     save_minutes = 5 # 每隔多少分钟保存一次模型
 
-    save_dir = 'model/' + str(datetime.now()).split('.')[0].split()[0] + '/' # 模型保存在当天应的目录中
-    # train_data_dir = 'gen_images/img_data'
-    train_data_dir = 'gen_images/img_data/00000000'
+    save_dir = 'model/' + str(datetime.now()).split('.')[0].split()[0] + '/' # 模型保存在当天对应的目录中
+    train_data_dir = 'gen_images/img_data/all'
+    # train_data_dir = 'gen_images/img_data/00000000'
     test_data_dir = 'test_data/'
     # weights_file_path = 'model/2016-04-18/17:01:13.h5'
 
@@ -97,12 +98,12 @@ if __name__ == '__main__':
     # model.load_weights(weights_file_path) # 读取训练好的模型
 
     # 先生成整个数据集，然后训练
-    X_train, Y_train_nb, Y_train = load_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set) 
-    train(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, X_train, Y_train_nb, Y_train)
+    # X_train, Y_train_nb, Y_train = load_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set) 
+    # train(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, X_train, Y_train_nb, Y_train)
     # 边训练边生成数据
-    # generator = generate_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set, batch_size)
-    # train_on_generator(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, generator)
+    generator = generate_data(train_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set, batch_size)
+    train_on_generator(model, batch_size, max_nb_cha, nb_epoch, save_dir, save_minutes, generator)
 
-    # X_test, Y_test_nb, Y_test = load_data(test_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
-    X_test, Y_test_nb, Y_test = X_train, Y_train_nb, Y_train
+    X_test, Y_test_nb, Y_test = load_data(test_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
+    # X_test, Y_test_nb, Y_test = X_train, Y_train_nb, Y_train
     test(model, len_set, cha_set, max_nb_cha, X_test, Y_test_nb, Y_test)
