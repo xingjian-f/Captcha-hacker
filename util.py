@@ -29,3 +29,13 @@ def plot_loss_figure(history, save_path):
     plt.ylabel('loss')
     plt.title('loss figure')
     plt.savefig(save_path)
+
+
+def pack_data(X, Y_nb, Y, max_nb_cha):
+    """
+    pack data to match keras format
+    """
+    data = {'output%d'%i:Y[i-1] for i in range(1, max_nb_cha+1)}
+    data['input'] = X
+    data['output_nb'] = Y_nb
+    return data
