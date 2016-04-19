@@ -1,5 +1,6 @@
 #coding:utf-8
 import numpy as np
+import matplotlib.pyplot as plt 
 
 def one_hot_encoder(data, whole_set):
     """
@@ -17,4 +18,14 @@ def one_hot_decoder(data, whole_set):
     for probs in data:
         idx = np.argmax(probs)
         ret.append(whole_set[idx])
-    return ret 
+    return ret
+
+
+def plot_loss_figure(history, save_path):
+    train_loss = [i.history['loss'] for i in history]
+    val_loss = [i.history['val_loss'] for i in history]
+    plt.plot(train_loss, 'b', val_loss, 'r')
+    plt.xlabel('train_loss: blue   val_loss: red      epoch')
+    plt.ylabel('loss')
+    plt.title('loss figure')
+    plt.savefig(save_path)
