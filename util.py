@@ -1,6 +1,7 @@
 #coding:utf-8
 import numpy as np
 import matplotlib.pyplot as plt 
+import theano.tensor as T
 
 def one_hot_encoder(data, whole_set):
     """
@@ -39,3 +40,6 @@ def pack_data(X, Y_nb, Y, max_nb_cha):
     data['input'] = X
     data['output_nb'] = Y_nb
     return data
+
+def log_prob(y_true, y_pred):
+    return -T.log(T.sum(y_pred*y_true, 1))
