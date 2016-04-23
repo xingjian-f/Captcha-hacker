@@ -22,12 +22,12 @@ def test(model, len_set, cha_set, max_nb_cha, X_test, Y_test_nb, Y_test):
     for i in range(nb_sample):
         pred_nb = pred_nbs[i]
         true_nb = Y_test_nb[i]
-        print 'len(pred, true):', pred_nb, true_nb
+        # print 'len(pred, true):', pred_nb, true_nb
         allright = (pred_nb == true_nb)
         if allright:
             len_correct += 1
         for j in range(true_nb):
-            print pred_chas[j][i], Y_test[j][i]
+            # print pred_chas[j][i], Y_test[j][i]
             allright = allright and (pred_chas[j][i] == Y_test[j][i])
         if allright:
             correct += 1
@@ -43,7 +43,7 @@ def train(model, batch_size, max_nb_cha, nb_epoch, save_dir, train_data, val_dat
 
     start_time = time.time()
     save_path = save_dir + 'weights.{epoch:02d}-{val_loss:.2f}.hdf5'
-    check_pointer = ModelCheckpoint(save_path)
+    check_pointer = ModelCheckpoint(save_path, save_best_only=True)
     history = model.fit(train_data, batch_size=batch_size, nb_epoch=nb_epoch, validation_data=val_data, 
     	callbacks=[check_pointer])
 
@@ -75,18 +75,18 @@ if __name__ == '__main__':
     cha_set = list("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") + ['empty'] # 文本字符集
     nb_classes = 63 # 数字10 + 大小写字母52 + empty1
     batch_size = 128
-    nb_epoch = 100
+    nb_epoch = 20
 
     save_dir = 'model/' + str(datetime.now()).split('.')[0].split()[0] + '/' # 模型保存在当天对应的目录中
-    train_data_dir = 'gen_images/img_data/train/jiangsu'
+    train_data_dir = 'gen_images/img_data/train/jiangsu1'
     # train_data_dir = 'gen_images/img_data/debug'
     val_data_dir = 'gen_images/img_data/validation/jiangsu'
     # val_data_dir = 'gen_images/img_data/debug'
     test_data_dir = 'test_data/jiangsu'
-    weights_file_path = 'model/2016-04-20/weights.39-2.22.hdf5'
+    weights_file_path = 'model/2016-04-23/weights.41-2.16.hdf5'
 
     model = build_cnn(img_channels, img_width, img_height, max_nb_cha, nb_classes) # 生成CNN的架构
-    # model.load_weights(weights_file_path) # 读取训练好的模型
+    model.load_weights(weights_file_path) # 读取训练好的模型
 
     # 先读取整个数据集，然后训练    
     X_val, Y_val_nb, Y_val = load_data(val_data_dir, max_nb_cha, img_width, img_height, img_channels, len_set, cha_set)
