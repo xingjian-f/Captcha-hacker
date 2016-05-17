@@ -26,19 +26,23 @@ def load_data(input_dir, max_nb_cha, width, height, channels, len_set, cha_set):
                 im = Image.open(filepath)
                 im = im.resize((width, height))
                 pixels = list(im.getdata())
-                x.append([[[pixels[k*width+i][j] for k in range(height)] for i in range(width)] for j in range(channels)]) # 转成（channel，width，height）shape
+                if channels > 1:
+                    x.append([[[pixels[k*width+i][j] for k in range(height)] for i in range(width)] for j in range(channels)]) # 转成（channel，width，height）shape
+                else:
+                    x.append([[[pixels[k*width+i] for k in range(height)] for i in range(width)]])
             
             label_path = dirpath + os.sep + 'label.txt'
             with open(label_path) as f:
                 for raw in f:
                     # print raw
                     raw = raw.strip('\n\r')
-                    y_nb.append(len(raw))
-                    for i in range(max_nb_cha):
-                        if i < len(raw):
-                            y[i].append(raw[i])
-                        else:
-                            y[i].append('empty')
+                    if len(raw) > 0:
+                        y_nb.append(len(raw))
+                        for i in range(max_nb_cha):
+                            if i < len(raw):
+                                y[i].append(raw[i])
+                            else:
+                                y[i].append('empty')
                     
 
     # 转成keras能接受的数据形式，以及做one hot 编码
