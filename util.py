@@ -41,5 +41,25 @@ def pack_data(X, Y_nb, Y, max_nb_cha):
     data['output_nb'] = Y_nb
     return data
 
+
 def log_prob(y_true, y_pred):
     return -T.log(T.sum(y_pred*y_true, 1))
+
+
+def label_smoothing(label):
+    eps = 0.01
+    k = label[0].shape[1]-1
+    f = np.vectorize(lambda x: x-eps if x==1 else eps/k)
+    label = f(label)
+    return label
+
+
+def pack_data_single(X, Y, nb_class):
+    data = {'output%d'%i: np.array([j[i-1] for j in Y[0]]) for i in range(1, nb_class+1)}
+    data['input'] = X
+    return data
+
+
+def weight_crossentropy(y_true, y_pred):
+    W = 35 # number of classes - 1
+    return -(W*y_true*T.log(y_pred) + (1-y_true)*T.log(1-y_pred))
