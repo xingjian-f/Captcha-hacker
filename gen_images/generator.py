@@ -109,7 +109,7 @@ def captcha_draw(size_im, nb_cha, set_cha, fonts=None, overlap=0.0,
     
     
     if os.path.exists(dir_path) == False: # 如果文件夹不存在，则创建对应的文件夹
-        os.mkdir(dir_path)
+        os.makedirs(dir_path)
         pic_id = 1
     else:
         pic_names = map(lambda x: x.split('.')[0], os.listdir(dir_path))
