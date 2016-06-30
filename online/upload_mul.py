@@ -18,4 +18,4 @@ def index():
 from werkzeug.contrib.fixers import ProxyFix
 app.wsgi_app = ProxyFix(app.wsgi_app)
 if __name__ == '__main__':
-	app.run(debug=1, host='0.0.0.0', port=5002)
+	app.run(debug=0, host='0.0.0.0', port=5002)

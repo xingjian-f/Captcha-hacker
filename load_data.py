@@ -20,7 +20,11 @@ def load_data(input_dir, max_nb_cha, width, height, channels, len_set, cha_set):
     for dirpath, dirnames, filenames in os.walk(input_dir):
         nb_pic = len(filenames)-1
         if nb_pic >= 1:
+            cnt = 50000 ## pay attention!!!!
             for i in range(1, nb_pic+1):
+                cnt -= 1
+                if cnt == 0:
+                    break
                 filename = str(i) + '.jpg'
                 filepath = dirpath + os.sep + filename
                 im = Image.open(filepath)
@@ -33,8 +37,12 @@ def load_data(input_dir, max_nb_cha, width, height, channels, len_set, cha_set):
             
             label_path = dirpath + os.sep + 'label.txt'
             with open(label_path) as f:
+                cnt = 50000
                 for raw in f:
                     # print raw
+                    cnt -= 1
+                    if cnt == 0:
+                        break
                     raw = raw.strip('\n\r')
                     if len(raw) > 0:
                         y_nb.append(len(raw))
