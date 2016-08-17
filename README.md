@@ -1,7 +1,7 @@
 # Captcha-hacker
 hack captcha with CNN
 
-This project is aimed at building a captcha hacker with CNN. I'm new to CNN, so it's also a project to play for fun and knowedge.
+This project is aimed at building a captcha hacker with CNN. I'm new to CNN, so it's also a project to play for fun and knowledge.
 
 The idea behind this model is from "Multi-digit Number Recognition from Street View Imagery using Deep Convolutional Neural Networks", a paper published by Google's reCAPTCHA Teams.
 
@@ -17,3 +17,6 @@ I'm going to split the project into three parts:
 (c) Tune CNN to get good performence.
 
 Ok, let's get started!
+
+UPDATE (2016.8.17)
+This project is no longer maintained, please check the new version of it,[https://github.com/xingjian-f/DeepLearning-OCR](url). The code is much more optimized, and it has been used in our inner crawler and OCR project.
