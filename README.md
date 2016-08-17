@@ -23,8 +23,6 @@ I'm going to split the project into three parts:
 
 Ok, let's get started!
 
-##################################################################
-
-UPDATE (2016.8.17)
+**UPDATE (2016.8.17)**
 
 This project is no longer maintained, please check the new version of it,[my new project: DeepLearning-OCR](https://github.com/xingjian-f/DeepLearning-OCR). The code is much more optimized, and it has been used in our inner crawler and OCR project.
